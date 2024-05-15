@@ -5,53 +5,40 @@ import numpy as np
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import pyproj
 import shapely.geometry as sgeom
 
 import cartopy.crs as ccrs
 
-def circle(geod, lon, lat, radius, n_samples=360):
-    """
-    Return the coordinates of a geodetic circle of a given
-    radius about a lon/lat point.
-
-    Radius is in meters in the geodetic's coordinate system.
-
-    """
-    lons, lats, back_azim = geod.fwd(np.repeat(lon, n_samples),
-                                     np.repeat(lat, n_samples),
-                                     np.linspace(360, 0, n_samples),
-                                     np.repeat(radius, n_samples),
-                                     radians=False,
-                                     )
-    return lons, lats
-
-
 def main():
-    ax1 = plt.axes(projection=ccrs.Robinson())
-    ax1.coastlines()
 
-    geod = Geod(ellps='WGS84')
+    # # set extent to the whole world
+    # lat1, lat2, lon1, lon2 = -90, 90, -180, 180
+    # now set extent to Europe
+    # lat1, lat2, lon1, lon2 = 35, 75, -20, 45
+    # lat0 = (lat1 + lat2) / 2
+    # lon0 = (lon1 + lon2) / 2
 
-    radius_km = 50
-    n_samples = 80
+    lat1, lat2, lon1, lon2 = -90, 90, -180, 180
+    lat0 = 90
+    lon0 = 0
+    # set a spherical globe with R=6371 km
+    sphere = ccrs.Globe(semimajor_axis=6371e3, semiminor_axis=6371e3, ellipse='sphere')
+    proj = ccrs.AzimuthalEquidistant(central_latitude=lat0, central_longitude=lon0, globe=sphere)
+
+
+    ax1 = plt.axes(projection=proj)
 
     ax1.add_feature(cfeature.LAND)
     ax1.add_feature(cfeature.OCEAN)
     ax1.add_feature(cfeature.COASTLINE)
     ax1.add_feature(cfeature.BORDERS, linestyle=':')
+    ax1.gridlines(draw_labels=True, color='black', alpha=1, linestyle='-.')
 
-    # set extent to scandinavia
-    lat1, lat2, lon1, lon2 = 54, 72, 4, 32
-
-    ax1.set_extent([lon1, lon2, lat1, lat2], ccrs.Geodetic())
-
-    geoms = []
-    for lat in np.linspace(lat1, lat2, 10):
-        for lon in np.linspace(lon1, lon2+10, 7):
-            lons, lats = circle(geod, lon, lat, radius_km * 1e3, n_samples)
-            geoms.append(sgeom.Polygon(zip(lons, lats)))
-
-    ax1.add_geometries(geoms, ccrs.Geodetic(), facecolor='blue', alpha=0.7)
+    # ax1.set_extent([lon1, lon2, lat1, lat2], crs=ccrs.PlateCarree())
+    
+    # ax1.tissot(facecolor='orange', alpha=0.4, lons=np.linspace(lon1, lon2, 5), lats=np.linspace(lat1, lat2, 10), rad_km=150)
+    ax1.tissot(facecolor='orange', alpha=0.4, lons=np.linspace(lon1, lon2, 20), lats=np.linspace(lat1, lat2, 15), rad_km=500)
 
     ax1.gridlines()
     plt.show()

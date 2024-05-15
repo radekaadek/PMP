@@ -41,44 +41,60 @@
 # %wrysowanie kontynentow
 # plot(Yk,Xk,'.','MarkerSize',4);
 
+def odwzorowanie(Lk, Fk):
+    R = 6371
+    Lk = np.deg2rad(Lk)
+    Fk = np.deg2rad(Fk)
+    lam0 = 0
+    phi0 = 90
+    lam_rad = np.deg2rad(lam0)
+    phi_rad = np.deg2rad(phi0)
+    ror = R * 1/np.tan(phi_rad) + R * phi_rad
+    c = np.sin(phi_rad)
+    ro = ror - R * Fk
+    delta = c * (Lk - lam_rad)
+    Xk = -ro * np.cos(delta)
+    Yk = ro * np.sin(delta)
+    return Xk, Yk
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-R = 6371
-L0 = 0
 
-# generowanie macierzy punktów węzłowych siatki
-no_f = 181
-no_l = 361
-f = np.linspace(-np.pi/2, np.pi/2, no_f)
-l = np.linspace(-np.pi, np.pi, no_l)
-L, F = np.meshgrid(l, f)
-
-# wzór na odwzorowanie
-X = R * F
-Y = R * np.cos(F) * (L - L0)
+# # generowanie macierzy punktów węzłowych siatki
+# no_f = 181
+# no_l = 361
+# f = np.linspace(-90, 90, no_f)
+# l = np.linspace(-180, 180, no_l)
+# L, F = np.meshgrid(l, f)
+#
+# # wzór na odwzorowanie
+# X, Y = odwzorowanie(L, F)
 
 # parametry rysowania
 plt.figure(1)
 plt.axis('equal')
 
-# rysowanie siatki
-delta_f = 15
-for i in range(0, no_f, delta_f):
-    plt.plot(Y[i, :], X[i, :], 'b')
-
-delta_l = 30
-for i in range(0, no_l, delta_l):
-    plt.plot(Y[:, i], X[:, i], 'b')
+# # rysowanie siatki
+# delta_f = 15
+# for i in range(0, no_f, delta_f):
+#     plt.plot(Y[i, :], X[i, :], 'b')
+#
+# delta_l = 30
+# for i in range(0, no_l, delta_l):
+#     plt.plot(Y[:, i], X[:, i], 'b')
 
 # odczytywanie współrzędnych (fi, lambda) kontynentów
 A = np.loadtxt('kontynenty.txt')
-Lk = A[:, 0] * np.pi / 180
-Fk = A[:, 1] * np.pi / 180
+Lk = A[:, 0]
+Fk = A[:, 1]
 
 # wzór na odwzorowanie
-Xk = R * Fk
-Yk = R * np.cos(Fk) * (Lk - L0)
+# Xk = R * Fk
+# Yk = R * np.cos(Fk) * (Lk - L0)
+
+
+Xk, Yk = odwzorowanie(Lk, Fk)
 
 # wrysowanie kontynentów
 plt.plot(Yk, Xk, '.', markersize=4)
