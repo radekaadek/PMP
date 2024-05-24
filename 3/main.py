@@ -28,7 +28,7 @@ print(f"3. Angles in the triangle: {name1}: {inssbruck_angle:.2f} deg, {name1}: 
 # now convert the points to a plane using the Lambert azimuthal equidistant projection on a sphere
 # define the projection
 ellipsoid_proj = pyproj.Proj("EPSG:4326")
-laed = pyproj.Proj(proj="laea", lat_0=lat1, lon_0=lon1, a=6371e3, b=6371e3, units="m")
+laed = pyproj.Proj(proj="aeqd", lat_0=lat1, lon_0=lon1, a=6371e3, b=6371e3, units="m")
 # convert the points to the plane
 transformer = pyproj.Transformer.from_proj(ellipsoid_proj, laed)
 x1, y1 = transformer.transform(lon1, lat1)
