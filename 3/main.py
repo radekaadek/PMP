@@ -6,6 +6,7 @@ import pyproj
 name1, name2 = "Innsbruck", "Vienna"
 lat1, lon1 = 47.280407, 11.409991 # Innsbruck
 lat2, lon2 = 48.201961, 16.3646931 # Vienna
+lat0, lon0 = lat1+lat2/2, lon1+lon2/2
 
 # calculate distance between 2 points
 # define geod as a sphere
@@ -27,12 +28,13 @@ print(f"3. Angles in the triangle: {name1}: {inssbruck_angle:.2f} deg, {name1}: 
 
 # now convert the points to a plane using the Lambert azimuthal equidistant projection on a sphere
 # define the projection
-ellipsoid_proj = pyproj.Proj("EPSG:4326")
-laed = pyproj.Proj(proj="aeqd", lat_0=lat1, lon_0=lon1, a=6371e3, b=6371e3, units="m")
+sphere_proj = pyproj.Proj(proj="longlat", a=6371e3, b=6371e3, units="m")
+laed = pyproj.Proj(proj="aeqd", lat_0=lat0, lon_0=lon0, a=6371e3, b=6371e3, units="m")
 # convert the points to the plane
-transformer = pyproj.Transformer.from_proj(ellipsoid_proj, laed)
+transformer = pyproj.Transformer.from_proj(sphere_proj, laed)
 x1, y1 = transformer.transform(lon1, lat1)
 x2, y2 = transformer.transform(lon2, lat2)
+
 print(f"4.1 {name1} on the plane: ({x1:.2f}, {y1:.2f}), {name2} on the plane: ({x2:.2f}, {y2:.2f})")
 
 distance_plane = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
@@ -46,6 +48,15 @@ A21T = np.degrees(np.arctan2(y1 - y2, x1 - x2))
 print(f"4.4 Topographic azimuths: A12T: {abs(A12T):.2f} deg, A21T: {abs(A21T):.2f} deg")
 
 # calculate the convergence of meridians
+# dX_dF=R*cos((L - L0)*sin(F0))
+# dY_dF=-R*sin((L - L0)*sin(F0)) 
+dX_dF11 = np.cos(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0))) # !!! R is ommited cause it cancels out !!!
+dY_dF11 = np.sin(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0)))
+dX_dF22 = np.cos(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
+dY_dF22 = -np.sin(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
+print(f"5. Tangent of the convergence of meridians in {name1}: {dY_dF11/dX_dF11:.2f}, in {name2}: {dY_dF22/dX_dF22:.2f}") # this is not zero cause its ellipsoid to sphere
+print(f"5. Angle of the convergence of meridians in {name1}: {np.degrees(np.arctan2(dY_dF11, dX_dF11)):.2f} deg, in {name2}: {np.degrees(np.arctan2(dY_dF22, dX_dF22)):.2f}")
+print("Close to zero cause its Azimuthal Equidistant projection")
 
 """
 Ćwiczenie 3
