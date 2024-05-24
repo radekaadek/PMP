@@ -29,11 +29,11 @@ print(f"3. Angles in the triangle: {name1}: {inssbruck_angle:.2f} deg, {name1}: 
 # now convert the points to a plane using the Lambert azimuthal equidistant projection on a sphere
 # define the projection
 sphere_proj = pyproj.Proj(proj="longlat", a=6371e3, b=6371e3, units="m")
-laed = pyproj.Proj(proj="aeqd", lat_0=lat0, lon_0=lon0, a=6371e3, b=6371e3, units="m")
+aeqd_proj = pyproj.Proj(proj="aeqd", lat_0=lat0, lon_0=lon0, a=6371e3, b=6371e3, units="m")
 # convert the points to the plane
-transformer = pyproj.Transformer.from_proj(sphere_proj, laed)
-x1, y1 = transformer.transform(lon1, lat1)
-x2, y2 = transformer.transform(lon2, lat2)
+transformer = pyproj.Transformer.from_proj(sphere_proj, aeqd_proj)
+y1, x1 = transformer.transform(lon1, lat1)
+y2, x2 = transformer.transform(lon2, lat2)
 
 print(f"4.1 {name1} on the plane: ({x1:.2f}, {y1:.2f}), {name2} on the plane: ({x2:.2f}, {y2:.2f})")
 
@@ -54,9 +54,10 @@ dX_dF11 = np.cos(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0))) # !!! R is 
 dY_dF11 = np.sin(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0)))
 dX_dF22 = np.cos(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
 dY_dF22 = -np.sin(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
-print(f"5. Tangent of the convergence of meridians in {name1}: {dY_dF11/dX_dF11:.2f}, in {name2}: {dY_dF22/dX_dF22:.2f}") # this is not zero cause its ellipsoid to sphere
-print(f"5. Angle of the convergence of meridians in {name1}: {np.degrees(np.arctan2(dY_dF11, dX_dF11)):.2f} deg, in {name2}: {np.degrees(np.arctan2(dY_dF22, dX_dF22)):.2f}")
+print(f"5.1 Tangent of the convergence of meridians in {name1}: {dY_dF11/dX_dF11:.2f}, in {name2}: {dY_dF22/dX_dF22:.2f}") # this is not zero cause its ellipsoid to sphere
+print(f"5.1 Angle of the convergence of meridians in {name1}: {np.degrees(np.arctan2(dY_dF11, dX_dF11)):.2f} deg, in {name2}: {np.degrees(np.arctan2(dY_dF22, dX_dF22)):.2f}")
 print("Close to zero cause its Azimuthal Equidistant projection")
+
 
 """
 Ćwiczenie 3
