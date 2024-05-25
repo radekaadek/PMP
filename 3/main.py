@@ -10,7 +10,7 @@ lat0, lon0 = lat1+lat2/2, lon1+lon2/2
 
 # calculate distance between 2 points
 # define geod as a sphere
-geod = Geod(ellps="sphere")
+geod = Geod(ellps="sphere", a=6371e3, b=6371e3)
 # geod = Geod(ellps="WGS84")
 angle1, angle2, distance_m = geod.inv(lon1, lat1, lon2, lat2)
 print(f"2. Distance between {name1} and {name2}: {distance_m/1000:.2f} km")
@@ -32,15 +32,24 @@ sphere_proj = pyproj.Proj(proj="longlat", a=6371e3, b=6371e3, units="m")
 aeqd_proj = pyproj.Proj(proj="aeqd", lat_0=lat0, lon_0=lon0, a=6371e3, b=6371e3, units="m")
 # convert the points to the plane
 transformer = pyproj.Transformer.from_proj(sphere_proj, aeqd_proj)
-y1, x1 = transformer.transform(lon1, lat1)
-y2, x2 = transformer.transform(lon2, lat2)
+x1, y1 = transformer.transform(lon1, lat1)
+x2, y2 = transformer.transform(lon2, lat2)
+
+# now calcualte with formulas:
+# X = -R * (cot(F0) + F0 - F) * cos(sin(F0) * (L - L0))
+# Y = R * (cot(F0) + F0 - F) * sin(sin(F0) * (L - L0))
+# y1 = -6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat1)) * np.cos(np.radians(lon1 - lon0)) + np.sin(np.radians(lat0)) * np.sin(np.radians(lat1)))
+# x1 = 6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat1)) * np.sin(np.radians(lon1 - lon0)))
+# y2 = -6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat2)) * np.cos(np.radians(lon2 - lon0)) + np.sin(np.radians(lat0)) * np.sin(np.radians(lat2)))
+# x2 = 6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat2)) * np.sin(np.radians(lon2 - lon0)))
+
 
 print(f"4.1 {name1} on the plane: ({x1:.2f}, {y1:.2f}), {name2} on the plane: ({x2:.2f}, {y2:.2f})")
 
 distance_plane = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 print(f"4.2 Distance between {name1} and {name2} on the plane: {distance_plane:.2f} m")
 dist_diff = distance_plane - distance_m
-print(f"4.3 Difference between the distances: {dist_diff:.2f} m")
+print(f"4.3 Difference between the distances: {abs(dist_diff):.2f} m")
 
 # calculate A12T and A21T
 A12T = np.degrees(np.arctan2(y2 - y1, x2 - x1))
@@ -54,9 +63,22 @@ dX_dF11 = np.cos(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0))) # !!! R is 
 dY_dF11 = np.sin(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0)))
 dX_dF22 = np.cos(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
 dY_dF22 = -np.sin(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
-print(f"5.1 Tangent of the convergence of meridians in {name1}: {dY_dF11/dX_dF11:.2f}, in {name2}: {dY_dF22/dX_dF22:.2f}") # this is not zero cause its ellipsoid to sphere
+print(f"5.1 Tangent of the convergence of meridians in {name1}: {dY_dF11/dX_dF11:.2f}, in {name2}: {dY_dF22/dX_dF22:.2f}")
 print(f"5.1 Angle of the convergence of meridians in {name1}: {np.degrees(np.arctan2(dY_dF11, dX_dF11)):.2f} deg, in {name2}: {np.degrees(np.arctan2(dY_dF22, dX_dF22)):.2f}")
-print("Close to zero cause its Azimuthal Equidistant projection")
+print("Close to zero cause its an Azimuthal projection")
+
+# plot the points
+import matplotlib.pyplot as plt
+# set equal axis
+plt.axis("equal")
+plt.plot([x1, x2], [y1, y2], "ro-")
+plt.text(x1, y1, name1)
+plt.text(x2, y2, name2)
+plt.xlabel("X [m]")
+plt.ylabel("Y [m]")
+plt.title("Innsbruck and Vienna on the plane")
+plt.grid()
+plt.show()
 
 
 """
