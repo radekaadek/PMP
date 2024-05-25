@@ -2,6 +2,17 @@ import numpy as np
 from pyproj import Geod
 import pyproj
 
+def projection(lat, lon, lat0, lon0):
+    R = 6371e3
+    ror = R*(1/np.tan(np.radians(lat0))) + R*np.radians(lat0)
+    c = np.sin(np.radians(lat0))
+    ro = ror - R*np.radians(lat)
+    delta = c*np.radians(lon - lon0)
+    x = -ro*np.cos(delta)
+    y = ro*np.sin(delta)
+    return y, x
+
+
 # define 2 points on a sphere and calculate the distance between them
 name1, name2 = "Innsbruck", "Vienna"
 lat1, lon1 = 47.280407, 11.409991 # Innsbruck
@@ -35,21 +46,15 @@ transformer = pyproj.Transformer.from_proj(sphere_proj, aeqd_proj)
 x1, y1 = transformer.transform(lon1, lat1)
 x2, y2 = transformer.transform(lon2, lat2)
 
-# now calcualte with formulas:
-# X = -R * (cot(F0) + F0 - F) * cos(sin(F0) * (L - L0))
-# Y = R * (cot(F0) + F0 - F) * sin(sin(F0) * (L - L0))
-# y1 = -6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat1)) * np.cos(np.radians(lon1 - lon0)) + np.sin(np.radians(lat0)) * np.sin(np.radians(lat1)))
-# x1 = 6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat1)) * np.sin(np.radians(lon1 - lon0)))
-# y2 = -6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat2)) * np.cos(np.radians(lon2 - lon0)) + np.sin(np.radians(lat0)) * np.sin(np.radians(lat2)))
-# x2 = 6371e3 * (np.cos(np.radians(lat0)) * np.cos(np.radians(lat2)) * np.sin(np.radians(lon2 - lon0)))
+x1, y1 = projection(lat1, lon1, lat0, lon0)
+x2, y2 = projection(lat2, lon2, lat0, lon0)
 
-
-print(f"4.1 {name1} on the plane: ({x1:.2f}, {y1:.2f}), {name2} on the plane: ({x2:.2f}, {y2:.2f})")
+print(f"4.1 {name1} on the projection plane: ({x1:.2f}, {y1:.2f}), {name2} on the projection plane: ({x2:.2f}, {y2:.2f})")
 
 distance_plane = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-print(f"4.2 Distance between {name1} and {name2} on the plane: {distance_plane:.2f} m")
+print(f"4.2 Distance between {name1} and {name2} on the plane: {distance_plane/1000:.2f} km")
 dist_diff = distance_plane - distance_m
-print(f"4.3 Difference between the distances: {abs(dist_diff):.2f} m")
+print(f"4.3 Difference between the distances: {abs(dist_diff)/1000:.2f} km")
 
 # calculate A12T and A21T
 A12T = np.degrees(np.arctan2(y2 - y1, x2 - x1))
