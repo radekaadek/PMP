@@ -60,7 +60,9 @@ print(f"4.3 Difference between the distances: {abs(dist_diff)/1000:.2f} km")
 # calculate A12T and A21T
 A12T = np.degrees(np.arctan2(y2 - y1, x2 - x1))
 A21T = np.degrees(np.arctan2(y1 - y2, x1 - x2))
-print(f"4.4 Topographic azimuths: A12T: {abs(A12T):.2f} deg, A21T: {abs(A21T):.2f} deg")
+A12T = (A12T + 360) % 360
+A21T = (A21T + 360) % 360
+print(f"4.4 Topographic azimuths: A12T: {abs(A12T):.2f} deg, A21T: {A21T:.2f} deg")
 
 # calculate the convergence of meridians
 # dX_dF=R*cos((L - L0)*sin(F0))
@@ -69,12 +71,6 @@ dX_dF2 = R*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
 # dY_dF=-R*sin((L - L0)*sin(F0))
 dY_dF1 = -R*np.sin(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
 dY_dF2 = -R*np.sin(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
-# dX_dl=R*(-F + F0 + cot(F0))*sin(F0)*sin((L - L0)*sin(F0))
-dX_dl1 = R*(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
-dX_dl2 = R*(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
-# dY_dl=R*(-F + F0 + cot(F0))*sin(F0)*cos((L - L0)*sin(F0))
-dY_dl1 = -(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.sin(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
-dY_dl2 = -(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.sin(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
 
 # tan(gamma) = dX_dF/dY_dF
 gamma1 = np.degrees(np.arctan2(dX_dF1, dY_dF1))
@@ -82,18 +78,18 @@ gamma2 = np.degrees(np.arctan2(dX_dF2, dY_dF2))
 print(f"5.1 Convergence of meridians: {gamma1:.2f} deg, {gamma2:.2f} deg")
 
 E = R**2
-G = R**2*np.cos(np.radians(lat0))**2
+G = R**2*((np.cos(np.radians(lat0)))**2)
 
 # dX_dl=R*(-F + F0 + cot(F0))*sin(F0)*sin((L - L0)*sin(F0))
-dX_dl1 = R*(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
-dX_dl2 = R*(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
+dX_dl1 = R*(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.sin(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
+dX_dl2 = R*(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.sin(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
 # dY_dl=R*(-F + F0 + cot(F0))*sin(F0)*cos((L - L0)*sin(F0))
 dY_dl1 = R*(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
 dY_dl2 = R*(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
 
-# E' = dX_dF1*dY_dl1 - dX_dl1*dY_dF1
-E1 = dX_dF1*dY_dl1 - dX_dl1*dY_dF1
-E2 = dX_dF2*dY_dl2 - dX_dl2*dY_dF2
+# E' = dX_dF1**2 + dY_dF1**2
+E1 = dX_dF1**2 + dY_dF1**2
+E2 = dX_dF2**2 + dY_dF2**2
 # F' = dX_dF1*dX_dl1 + dY_dF1*dY_dl1
 F1 = dX_dF1*dX_dl1 + dY_dF1*dY_dl1
 F2 = dX_dF2*dX_dl2 + dY_dF2*dY_dl2
@@ -106,10 +102,32 @@ P2 = E2/E
 # tan(A') = p*sin(A)/P*cos(A) + Q*sin(A)
 A12p = np.degrees(np.arctan2(P1*np.sin(np.radians(A12T)), P1*np.cos(np.radians(A12T)) + Q1))
 A21p = np.degrees(np.arctan2(P2*np.sin(np.radians(A21T)), P2*np.cos(np.radians(A21T)) + Q2))
-print(f"5.2 Topographic azimuths: A12T: {abs(A12p):.2f} deg, A21T: {abs(A21p):.2f} deg")
+A12p = (A12p + 360) % 360
+A21p = (A21p + 360) % 360
+print(f"5.2 Topographic azimuth projections: A12': {A12p:.2f} deg, A21': {A21p:.2f} deg")
 delta12 = A12T - gamma1 - A12p
 delta21 = A21T - gamma2 - A21p
+delta12 = (delta12 + 360) % 360
+delta21 = (delta21 + 360) % 360
 print(f"5.3 Reduction angles: {delta12:.2f} deg, {delta21:.2f} deg")
+# 5.4 Obliczamy długości d12’ odpowiedników obrazowych boków trójkąta
+# aproksymowanych łukami okręgów, zgodnie z rysunkiem 4
+# delta = (delta12 + delta21) / 2
+delta = (delta12 + delta21) / 2
+# r = 0.5*d12/np.cos(90-delta)
+r = 0.5*distance_plane/np.cos(np.radians(90 - delta))
+# x_2d = 2*delta
+x_2d = 2*delta
+# d12' = r*x_2d
+d12p = r*x_2d
+print(f"5.4 Length of the line connecting P1'P2' on the projection plane: {d12p/1000:.2f} km")
+mi12 = np.sqrt(P1*np.cos(A12T)**2 + Q1*np.sin(2*A12T) + R*np.sin(A12T)**2)
+mi21 = np.sqrt(P2*np.cos(A21T)**2 + Q2*np.sin(2*A21T) + R*np.sin(A21T)**2)
+mi = (mi12 + mi21) / 2
+d12p2 = mi*distance_m
+print(f"5.4 Length of the line connecting P1'P2' on the projection plane using the scale of length distortions: {d12p2/1000:.2f} km")
+
+
 
 
 # plot the points
