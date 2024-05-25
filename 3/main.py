@@ -2,6 +2,8 @@ import numpy as np
 from pyproj import Geod
 import pyproj
 
+R = 6371e3
+
 def projection(lat, lon, lat0, lon0):
     R = 6371e3
     ror = R*(1/np.tan(np.radians(lat0))) + R*np.radians(lat0)
@@ -12,7 +14,6 @@ def projection(lat, lon, lat0, lon0):
     y = ro*np.sin(delta)
     return y, x
 
-
 # define 2 points on a sphere and calculate the distance between them
 name1, name2 = "Innsbruck", "Vienna"
 lat1, lon1 = 47.280407, 11.409991 # Innsbruck
@@ -21,7 +22,7 @@ lat0, lon0 = lat1+lat2/2, lon1+lon2/2
 
 # calculate distance between 2 points
 # define geod as a sphere
-geod = Geod(ellps="sphere", a=6371e3, b=6371e3)
+geod = Geod(ellps="sphere", a=R, b=R)
 # geod = Geod(ellps="WGS84")
 angle1, angle2, distance_m = geod.inv(lon1, lat1, lon2, lat2)
 print(f"2. Distance between {name1} and {name2}: {distance_m/1000:.2f} km")
@@ -39,8 +40,8 @@ print(f"3. Angles in the triangle: {name1}: {inssbruck_angle:.2f} deg, {name1}: 
 
 # now convert the points to a plane using the Lambert azimuthal equidistant projection on a sphere
 # define the projection
-sphere_proj = pyproj.Proj(proj="longlat", a=6371e3, b=6371e3, units="m")
-aeqd_proj = pyproj.Proj(proj="aeqd", lat_0=lat0, lon_0=lon0, a=6371e3, b=6371e3, units="m")
+sphere_proj = pyproj.Proj(proj="longlat", a=R, b=R, units="m")
+aeqd_proj = pyproj.Proj(proj="aeqd", lat_0=lat0, lon_0=lon0, a=R, b=R, units="m")
 # convert the points to the plane
 transformer = pyproj.Transformer.from_proj(sphere_proj, aeqd_proj)
 x1, y1 = transformer.transform(lon1, lat1)
@@ -63,14 +64,53 @@ print(f"4.4 Topographic azimuths: A12T: {abs(A12T):.2f} deg, A21T: {abs(A21T):.2
 
 # calculate the convergence of meridians
 # dX_dF=R*cos((L - L0)*sin(F0))
-# dY_dF=-R*sin((L - L0)*sin(F0)) 
-dX_dF11 = np.cos(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0))) # !!! R is ommited cause it cancels out !!!
-dY_dF11 = np.sin(np.deg2rad(lon1 - lon0) * np.sin(np.deg2rad(lat0)))
-dX_dF22 = np.cos(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
-dY_dF22 = -np.sin(np.deg2rad(lon2 - lon0) * np.sin(np.deg2rad(lat0)))
-print(f"5.1 Tangent of the convergence of meridians in {name1}: {dY_dF11/dX_dF11:.2f}, in {name2}: {dY_dF22/dX_dF22:.2f}")
-print(f"5.1 Angle of the convergence of meridians in {name1}: {np.degrees(np.arctan2(dY_dF11, dX_dF11)):.2f} deg, in {name2}: {np.degrees(np.arctan2(dY_dF22, dX_dF22)):.2f}")
-print("Close to zero cause its an Azimuthal projection")
+dX_dF1 = R*np.cos(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
+dX_dF2 = R*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
+# dY_dF=-R*sin((L - L0)*sin(F0))
+dY_dF1 = -R*np.sin(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
+dY_dF2 = -R*np.sin(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
+# dX_dl=R*(-F + F0 + cot(F0))*sin(F0)*sin((L - L0)*sin(F0))
+dX_dl1 = R*(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
+dX_dl2 = R*(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
+# dY_dl=R*(-F + F0 + cot(F0))*sin(F0)*cos((L - L0)*sin(F0))
+dY_dl1 = -(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.sin(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
+dY_dl2 = -(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.sin(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
+
+# tan(gamma) = dX_dF/dY_dF
+gamma1 = np.degrees(np.arctan2(dX_dF1, dY_dF1))
+gamma2 = np.degrees(np.arctan2(dX_dF2, dY_dF2))
+print(f"5.1 Convergence of meridians: {gamma1:.2f} deg, {gamma2:.2f} deg")
+
+E = R**2
+G = R**2*np.cos(np.radians(lat0))**2
+
+# dX_dl=R*(-F + F0 + cot(F0))*sin(F0)*sin((L - L0)*sin(F0))
+dX_dl1 = R*(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
+dX_dl2 = R*(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
+# dY_dl=R*(-F + F0 + cot(F0))*sin(F0)*cos((L - L0)*sin(F0))
+dY_dl1 = R*(-np.radians(lat1) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon1 - lon0)*np.sin(np.radians(lat0)))
+dY_dl2 = R*(-np.radians(lat2) + np.radians(lat0) + 1/np.tan(np.radians(lat0)))*np.sin(np.radians(lat0))*np.cos(np.radians(lon2 - lon0)*np.sin(np.radians(lat0)))
+
+# E' = dX_dF1*dY_dl1 - dX_dl1*dY_dF1
+E1 = dX_dF1*dY_dl1 - dX_dl1*dY_dF1
+E2 = dX_dF2*dY_dl2 - dX_dl2*dY_dF2
+# F' = dX_dF1*dX_dl1 + dY_dF1*dY_dl1
+F1 = dX_dF1*dX_dl1 + dY_dF1*dY_dl1
+F2 = dX_dF2*dX_dl2 + dY_dF2*dY_dl2
+# Q = F'/sqrt(E*G)
+Q1 = F1/np.sqrt(E*G)
+Q2 = F2/np.sqrt(E*G)
+# P = E'/E
+P1 = E1/E
+P2 = E2/E
+# tan(A') = p*sin(A)/P*cos(A) + Q*sin(A)
+A12p = np.degrees(np.arctan2(P1*np.sin(np.radians(A12T)), P1*np.cos(np.radians(A12T)) + Q1))
+A21p = np.degrees(np.arctan2(P2*np.sin(np.radians(A21T)), P2*np.cos(np.radians(A21T)) + Q2))
+print(f"5.2 Topographic azimuths: A12T: {abs(A12p):.2f} deg, A21T: {abs(A21p):.2f} deg")
+delta12 = A12T - gamma1 - A12p
+delta21 = A21T - gamma2 - A21p
+print(f"5.3 Reduction angles: {delta12:.2f} deg, {delta21:.2f} deg")
+
 
 # plot the points
 import matplotlib.pyplot as plt
