@@ -25,6 +25,7 @@ def main():
     # set a spherical globe with R=6371 km
     sphere = ccrs.Globe(semimajor_axis=6371e3, semiminor_axis=6371e3, ellipse='sphere')
     proj = ccrs.AzimuthalEquidistant(central_latitude=lat0, central_longitude=lon0, globe=sphere)
+    # proj = ccrs.AlbersEqualArea(central_latitude=lat0, central_longitude=lon0, globe=sphere)
 
 
     ax1 = plt.axes(projection=proj)
@@ -39,6 +40,7 @@ def main():
     
     # ax1.tissot(facecolor='orange', alpha=0.4, lons=np.linspace(lon1, lon2, 5), lats=np.linspace(lat1, lat2, 10), rad_km=150)
     ax1.tissot(facecolor='orange', alpha=0.4, lons=np.linspace(lon1, lon2, 20), lats=np.linspace(lat1, lat2, 15), rad_km=500)
+
 
     ax1.gridlines()
     plt.show()
