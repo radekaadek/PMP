@@ -20,7 +20,7 @@ def main():
     # lon0 = (lon1 + lon2) / 2
 
     lat1, lat2, lon1, lon2 = -90, 90, -180, 180
-    lat0 = 90
+    lat0 = 0.000001
     lon0 = 0
     # set a spherical globe with R=6371 km
     sphere = ccrs.Globe(semimajor_axis=6371e3, semiminor_axis=6371e3, ellipse='sphere')

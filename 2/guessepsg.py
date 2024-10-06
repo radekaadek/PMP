@@ -7,20 +7,16 @@ import pyproj
 import numpy as np
 import sys
 
-def odwzorowanie(Lk, Fk):
-    R = 6371e3
-    Lk = np.deg2rad(Lk)
-    Fk = np.deg2rad(Fk)
-    lam0 = 0
-    phi0 = 90
-    lam_rad = np.deg2rad(lam0)
-    phi_rad = np.deg2rad(phi0)
-    ror = R * 1/np.tan(phi_rad) + R * phi_rad
-    c = np.sin(phi_rad)
-    ro = ror - R * Fk
-    delta = c * (Lk - lam_rad)
-    Xk = -ro * np.cos(delta)
-    Yk = ro * np.sin(delta)
+def odwzorowanie(Fk, Lk):
+    R = 6371000
+    F0 = np.radians(90)
+    L0 = 0
+    ror = R*(1/np.tan(F0)) + R*F0
+    c = np.sin(F0)
+    ro = ror - R*Lk
+    delta = c*(Fk - L0)
+    Xk = -ro*np.cos(delta)
+    Yk = ro*np.sin(delta)
     return Xk, Yk
 
 def guess_eps(projection):
@@ -51,9 +47,9 @@ def guess_eps(projection):
     return curr_epsg, best_error
 
 
-epsg, err = guess_eps(odwzorowanie)
-print('The guessed code is: {}'.format(epsg))
-print('The error is: {}'.format(err))
+# epsg, err = guess_eps(odwzorowanie)
+# print('The guessed code is: {}'.format(epsg))
+# print('The error is: {}'.format(err))
 
 # now try +proj=omerc +lat_0=40 +lat_1=0 +lon_1=0 +lat_2=60 +lon_2=60 +k=1 +x_0=0 +y_0=0 +R=6371000 +units=m +no_defs
 # lat1, lon1 = 0.0001, 0.0001
@@ -76,11 +72,11 @@ import matplotlib.pyplot as plt
 plt.figure(1)
 plt.axis('equal')
 A = np.loadtxt('kontynenty.txt')
-Lk = A[:, 0]
-Fk = A[:, 1]
+Fk = A[:, 0]
+Lk = A[:, 1]
 # xs = np.array(Lk)
 # ys = np.array(Fk)
 
-Xs, Ys = odwzorowanie(Lk, Fk)
+Xs, Ys = odwzorowanie(Fk, Lk)
 plt.plot(Xs, Ys, '.', markersize=4)
 plt.show()
