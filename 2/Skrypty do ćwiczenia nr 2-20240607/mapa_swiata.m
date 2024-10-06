@@ -1,17 +1,16 @@
 clear all;
-R=6371000;
-L0=0;
+R=6371;
 %generowanie macierzy punktow wezlowych siatki
 no_f=181;
 no_l=361;
-f=linspace(-pi/2,pi/2,no_f);
+f=linspace(-80*pi/180,80*pi/180,no_f);
 l=linspace(-pi,pi,no_l);
 [L,F] = meshgrid(l,f);
 
 %wzor na odwzorowanie
 % X=R*F;
 % Y=R*cos(F).*(L-L0);
-F0 = pi/2;
+F0 = 0.001 * pi/180;
 L0 = 0
 cot_F0 = cot(F0);
 sin_F0 = sin(F0);

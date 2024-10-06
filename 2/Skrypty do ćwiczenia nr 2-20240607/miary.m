@@ -3,10 +3,10 @@
 % y_fi=-R*(L-L0).*sin(F);
 % x_l=0;
 % y_l=R*cos(F);
-x_fi = R*cos((L - L0)*sin(F0))
-y_fi = -R*sin((L - L0)*sin(F0))
-x_l = R.*(-F + F0 + cot(F0)).*sin(F0).*sin((L - L0)*sin(F0))
-y_l = R.*(-F + F0 + cot(F0))*sin(F0).*cos((L - L0).*sin(F0))
+x_fi = R*cos((L - L0)*sin(F0));
+y_fi = -R*sin((L - L0)*sin(F0));
+x_l = R.*(-F + F0 + cot(F0)).*sin(F0).*sin((L - L0)*sin(F0));
+y_l = R.*(-F + F0 + cot(F0))*sin(F0).*cos((L - L0).*sin(F0));
 
 Ep=x_fi.^2+y_fi.^2;
 Fp=x_fi.*x_l+y_fi.*y_l;
@@ -18,6 +18,8 @@ Rd=Gp./(R.^2.*cos(F).^2);
 
 %skala pól
 p=Hp./(R.^2.*cos(F));
+% set the first row to be equal to the second row ROW NOT COLUMN
+p(1,:)=p(2,:);
 
 A=sqrt(Pd+Rd+2*p);
 B=sqrt(abs(Pd+Rd-2*p));

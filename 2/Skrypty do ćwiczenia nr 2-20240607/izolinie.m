@@ -1,2 +1,2 @@
-[c,h]=contour(Y,X,m);
+[c,h]=contour(Y,X,p);
 clabel(c,h);

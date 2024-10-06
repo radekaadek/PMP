@@ -1,8 +1,8 @@
 sk=500; %skala elips
 for i=1:delta_f:no_f;  
     for j=1:delta_l:no_l;
-        mi1w=[x_fi;y_fi(i,j)]/R;
-        mi2w=[x_l;y_l(i,j)]/(R*cos(F(i,j)));
+        mi1w=[x_fi(i,j);y_fi(i,j)]/R;
+        mi2w=[x_l(i,j);y_l(i,j)]/(R.*cos(F(i,j)));
         A=0;
         for v=1:180;
             mi=(mi1w*cos(A)+mi2w*sin(A));
@@ -13,3 +13,4 @@ for i=1:delta_f:no_f;
        plot(wy,wx,'r');
     end;
 end;
+
